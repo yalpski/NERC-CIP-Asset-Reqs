@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CIP Classification and Requirement Mapping</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.3/css/bulma.min.css">
+    <style>
+        body {
+            padding: 2rem;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .button {
+            margin-top: 1rem;
+        }
+        #output {
+            margin-top: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">CIP Classification and Requirement Mapping</h1>
+        
+        <div class="field">
+            <label class="label" for="classification">Classification:</label>
+            <div class="control">
+                <div class="select">
+                    <select id="classification">
+                        <option value="BCA">BCA</option>
+                        <option value="PCA">PCA</option>
+                        <option value="EAP">EAP</option>
+                        <option value="EACMS">EACMS</option>
+                        <option value="PACS">PACS</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="field">
+            <label class="label" for="impactRating">Impact Rating:</label>
+            <div class="control">
+                <div class="select">
+                    <select id="impactRating">
+                        <option value="High_Impact">High Impact</option>
+                        <option value="Medium_Impact">Medium Impact</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="field">
+            <label class="label" for="standard">Standard:</label>
+            <div class="control">
+                <div class="select">
+                    <select id="standard" onchange="updateRequirementDropdown()">
+                        <option value="CIP-004-7">CIP-004-7</option>
+                        <option value="CIP-005-7">CIP-005-7</option>
+                        <option value="CIP-006-6">CIP-006-6</option>
+                        <option value="CIP-007-7">CIP-007-7</option>
+                        <option value="CIP-008-6">CIP-008-6</option>
+                        <option value="CIP-009-6">CIP-009-6</option>
+                        <option value="CIP-010-4">CIP-010-4</option>
+                        <option value="CIP-011-3">CIP-011-3</option>
+                        <option value="CIP-013-2">CIP-013-2</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="field">
+            <label class="label" for="requirement">Requirement:</label>
+            <div class="control">
+                <div class="select">
+                    <select id="requirement">
+                        <!-- Will be populated dynamically -->
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="buttons">
+            <button class="button is-primary" onclick="showRequirementsByAsset()">Show Requirements by Asset</button>
+            <button class="button is-link" onclick="showAssetsByRequirement()">Show Assets by Requirement</button>
+        </div>
+
+        <div id="output"></div>
+    </div>
+
+    <script>
+        const cipMatrix = {
+            "BCA": {
+    "High_Impact": {
+      "CIP-004-7": ["R2.1", "R2.2", "R2.3", "R3.1", "R3.2", "R3.3", "R3.4", "R3.5", "R4.1", "R4.2", "R4.3", "R4.4", "R5.1", "R5.2", "R5.3", "R5.4", "R5.5"],
+      "CIP-005-7": ["R1.1", "R1.2", "R1.4", "R2.1", "R2.2", "R2.3", "R2.4", "R2.5"],
+      "CIP-006-6": ["R1.3", "R1.4", "R1.5", "R1.8", "R1.9", "R1.10", "R2.1", "R2.2", "R2.3"],
+      "CIP-007-7": ["R1.1", "R1.2", "R2.1", "R2.2", "R2.3", "R2.4", "R3.1", "R3.2", "R3.3", "R4.1", "R4.2", "R4.3", "R4.4"],
+      "CIP-008-6": ["R1.1", "R1.2", "R1.3", "R1.4", "R2.1", "R2.2", "R2.3", "R3.1", "R3.2", "R4.1", "R4.2", "R4.3"],
+      "CIP-009-6": ["R1.1", "R1.2", "R1.3", "R1.4", "R1.5", "R2.1", "R2.2", "R2.3", "R3.1", "R3.2"],
+      "CIP-010-4": ["R1.1", "R1.2", "R1.3", "R1.4", "R1.5", "R1.6", "R2.1", "R3.1", "R3.2", "R3.3", "R3.4", "R4"],
+      "CIP-011-3": ["R1.1", "R1.2", "R2.1", "R2.2"],
+      "CIP-013-2": ["R1.1", "R1.2"]
+    },
+    "Medium_Impact": {
+      "CIP-004-7": ["R2.1", "R2.2", "R2.3", "R3.1", "R3.2", "R3.3", "R3.4", "R3.5", "R4.1", "R4.2", "R4.3", "R4.4", "R5.1", "R5.2", "R5.3"],
+      "CIP-005-7": ["R1.1", "R1.2", "R1.4", "R2.1", "R2.2", "R2.3", "R2.4", "R2.5"],
+      "CIP-006-6": ["R1.1", "R1.2", "R1.4", "R1.5", "R1.8", "R1.9", "R1.10", "R2.1", "R2.2", "R2.3"],
+      "CIP-007-7": ["R1.1", "R1.2", "R2.1", "R2.2", "R2.3", "R2.4", "R3.1", "R3.2", "R3.3", "R4.1", "R4.2", "R4.3"],
+      "CIP-008-6": ["R1.1", "R1.2", "R1.3", "R1.4", "R2.1", "R2.2", "R2.3", "R3.1", "R3.2", "R4.1", "R4.2", "R4.3"],
+      "CIP-009-6": ["R1.1", "R1.2", "R1.3", "R1.4", "R2.1", "R2.2", "R3.1", "R3.2"],
+      "CIP-010-4": ["R1.1", "R1.2", "R1.3", "R1.4", "R1.6", "R3.1", "R3.4"],
+      "CIP-011-3": ["R1.1", "R1.2", "R2.1", "R2.2"],
+      "CIP-013-2": ["R1.1", "R1.2"]
+    },
+    "Low_Impact": {
+      
+    }
+  },
+  "PCA": {
+    "High_Impact": {
+      "CIP-005-7": ["R1.1", "R1.2", "R1.4", "R2.1", "R2.2", "R2.3", "R2.4", "R2.5"],
+      "CIP-006-6": ["R1.3", "R1.4", "R1.5", "R1.8", "R1.9", "R1.10", "R2.1", "R2.2", "R2.3"],
+      "CIP-007-7": ["R1.1", "R1.2", "R2.1", "R2.2", "R2.3", "R2.4", "R3.1", "R3.2", "R3.3", "R4.1", "R4.2", "R4.3", "R4.4"],
+      "CIP-010-4": ["R1.1", "R1.2", "R1.3", "R1.4", "R2.1", "R3.1", "R3.3", "R3.4", "R4"],
+      "CIP-011-3": ["R2.1", "R2.2"]
+    },
+    "Medium_Impact": {
+      "CIP-005-7": ["R1.1", "R1.2", "R1.4", "R2.1", "R2.2", "R2.3", "R2.4", "R2.5"],
+      "CIP-006-6": ["R1.2", "R1.4", "R1.5", "R1.8", "R1.9", "R1.10", "R2.1", "R2.2", "R2.3"],
+      "CIP-007-7": ["R1.1", "R1.2", "R2.1", "R2.2", "R2.3", "R2.4", "R3.1", "R3.2", "R3.3", "R4.1", "R4.2", "R4.3"],
+      "CIP-010-4": ["R1.1", "R1.2", "R1.3", "R1.4", "R3.1", "R3.4", "R4"],
+      "CIP-011-3": ["R2.1", "R2.2"]
+    }
+  },
+  "EAP": {
+    "High_Impact": {
+      "CIP-005-7": ["R1.3", "R1.5"]
+    },
+    "Medium_Impact": {
+      "CIP-005-7": ["R1.3", "R1.5"]
+    },
+    "Low_Impact": {
+      
+    }
+  },
+  "EACMS": {
+    "High_Impact": {
+      "CIP-004-7": ["R2.1", "R2.2", "R2.3", "R3.1", "R3.2", "R3.3", "R3.4", "R3.5", "R4.1", "R4.2", "R4.3", "R4.4", "R5.1", "R5.2", "R5.3", "R5.4", "R5.5"],
+      "CIP-005-7": ["R3.1", "R3.2"],
+      "CIP-006-6": ["R1.3", "R1.4", "R1.5", "R1.8", "R1.9", "R2.1", "R2.2", "R2.3"],
+      "CIP-007-7": ["R1.1", "R2.1", "R2.2", "R2.3", "R2.4", "R3.1", "R3.2", "R3.3", "R4.1", "R4.2", "R4.3", "R4.4"],
+      "CIP-008-6": ["R1.1", "R1.2", "R1.3", "R1.4", "R2.1", "R2.2", "R2.3", "R3.1", "R3.2", "R4.1", "R4.2", "R4.3"],
+      "CIP-009-6": ["R1.1", "R1.2", "R1.3", "R1.4", "R2.1", "R2.2", "R3.1", "R3.2"],
+      "CIP-010-4": ["R1.1", "R1.2", "R1.3", "R1.4", "R1.6", "R2.1", "R3.1", "R3.3", "R3.4"],
+      "CIP-011-3": ["R1.1", "R1.2", "R2.1", "R2.2"],
+      "CIP-013-2": ["R1.1", "R1.2"]
+    },
+    "Medium_Impact": {
+      "CIP-004-7": ["R2.1", "R2.2", "R2.3", "R3.1", "R3.2", "R3.3", "R3.4", "R3.5", "R4.1", "R4.2", "R4.3", "R4.4", "R5.1", "R5.2", "R5.3"],
+      "CIP-005-7": ["R3.1", "R3.2"],
+      "CIP-006-6": ["R1.2", "R1.4", "R1.5", "R1.8", "R1.9", "R2.1", "R2.2", "R2.3"],
+      "CIP-007-7": ["R1.1", "R2.1", "R2.2", "R2.3", "R2.4", "R3.1", "R3.2", "R3.3", "R4.1", "R4.2", "R4.3"],
+      "CIP-008-6": ["R1.1", "R1.2", "R1.3", "R1.4", "R2.1", "R2.2", "R2.3", "R3.1", "R3.2", "R4.1", "R4.2", "R4.3"],
+      "CIP-009-6": ["R1.1", "R1.2", "R1.3", "R1.4", "R2.1", "R2.2", "R3.1", "R3.2"],
+      "CIP-010-4": ["R1.1", "R1.2", "R1.3", "R1.4", "R1.6", "R3.1", "R3.4"],
+      "CIP-011-3": ["R1.1", "R1.2", "R2.1", "R2.2"],
+      "CIP-013-2": ["R1.1", "R1.2"]
+    }
+  },
+  "PACS": {
+    "High_Impact": {
+      "CIP-004-7": ["R2.1", "R2.2", "R2.3", "R3.1", "R3.2", "R3.3", "R3.4", "R3.5", "R4.1", "R4.2", "R4.3", "R4.4", "R5.1", "R5.2", "R5.3"],
+      "CIP-005-7": ["R3.1", "R3.2"],
+      "CIP-006-6": ["R1.1", "R1.6", "R1.7", "R3.1"],
+      "CIP-007-7": ["R1.1", "R2.1", "R2.2", "R2.3", "R2.4", "R3.1", "R3.2", "R3.3", "R4.1", "R4.2", "R4.3", "R4.4"],
+      "CIP-009-6": ["R1.1", "R1.2", "R1.3", "R1.4", "R2.1", "R2.2", "R3.1", "R3.2"],
+      "CIP-010-4": ["R1.1", "R1.2", "R1.3", "R1.4", "R1.6", "R3.1", "R3.4"],
+      "CIP-011-3": ["R1.1", "R1.2", "R2.1", "R2.2"],
+      "CIP-013-2": ["R1.1", "R1.2"]
+    },
+    "Medium_Impact": {
+      "CIP-004-7": ["R2.1", "R2.2", "R2.3", "R3.1", "R3.2", "R3.3", "R3.4", "R3.5", "R4.1", "R4.2", "R4.3", "R4.4", "R5.1", "R5.2", "R5.3"],
+      "CIP-005-7": ["R3.1", "R3.2"],
+      "CIP-006-6": ["R1.1", "R1.6", "R1.7", "R3.1"],
+      "CIP-007-7": ["R1.1", "R2.1", "R2.2", "R2.3", "R2.4", "R3.1", "R3.2", "R3.3", "R4.1", "R4.2", "R4.3"],
+      "CIP-009-6": ["R1.1", "R1.2", "R1.3", "R1.4", "R2.1", "R2.2", "R3.1", "R3.2"],
+      "CIP-010-4": ["R1.1", "R1.2", "R1.3", "R1.4", "R1.6", "R3.1", "R3.4"],
+      "CIP-011-3": ["R1.1", "R1.2", "R2.1", "R2.2"],
+      "CIP-013-2": ["R1.1", "R1.2"]
+    }
+  }
+        };
+
+        const cipRequirementDetails = {
+    "CIP-004-7": {
+      "R1": {
+        "description": "Each Responsible Entity shall implement one or more documented processes that collectively include each of the applicable requirement parts in CIP-004-7 Table R1 – Security Awareness Program.",
+        "subRequirements": {
+          "R1.1": "Security awareness that, at least once each calendar quarter, reinforces cyber security practices (which may include associated physical security practices) for the Responsible Entity's personnel who have authorized electronic or authorized unescorted physical access to BES Cyber Systems."
+        }
+      },
+      "R2": {
+        "description": "Each Responsible Entity shall implement one or more cyber security training program(s) appropriate to individual roles, functions, or responsibilities that collectively includes each of the applicable requirement parts in CIP-004-7 Table R2 – Cyber Security Training Program.",
+        "subRequirements": {
+          "R2.1": "Training content on: cyber security policies; physical access controls; electronic access controls; visitor control program; handling of BES Cyber System Information and its storage; identification of a Cyber Security Incident and initial notifications; recovery plans for BES Cyber Systems; response to Cyber Security Incidents; and cyber security risks associated with a BES Cyber System's electronic interconnectivity and interoperability with other Cyber Assets, including Transient Cyber Assets, and with Removable Media.",
+          "R2.2": "Require completion of the training specified in Part 2.1 prior to granting authorized electronic access and authorized unescorted physical access to applicable Cyber Assets, except during CIP Exceptional Circumstances.",
+          "R2.3": "Require completion of the training specified in Part 2.1 at least once every 15 calendar months."
+        }
+      },
+      "R3": {
+        "description": "Each Responsible Entity shall implement one or more documented personnel risk assessment program(s) to attain and retain authorized electronic or authorized unescorted physical access to BES Cyber Systems that collectively include each of the applicable requirement parts in CIP-004-7 Table R3 – Personnel Risk Assessment Program.",
+        "subRequirements": {
+          "R3.1": "Process to confirm identity.",
+          "R3.2": "Process to perform a seven year criminal history records check as part of each personnel risk assessment.",
+          "R3.3": "Criteria or process to evaluate criminal history records checks for authorizing access.",
+          "R3.4": "Criteria or process for verifying that personnel risk assessments performed for contractors or service vendors are conducted according to Parts 3.1 through 3.3.",
+          "R3.5": "Process to ensure that individuals with authorized electronic or authorized unescorted physical access have had a personnel risk assessment completed according to Parts 3.1 to 3.4 within the last seven years."
+        }
+      },
+      "R4": {
+        "description": "Each Responsible Entity shall implement one or more documented access management program(s) that collectively include each of the applicable requirement parts in CIP-004-7 Table R4 – Access Management Program.",
+        "subRequirements": {
+          "R4.1": "Process to authorize based on need, as determined by the Responsible Entity, except for CIP Exceptional Circumstances: electronic access; unescorted physical access into a Physical Security Perimeter; and access to designated storage locations, whether physical or electronic, for BES Cyber System Information.",
+          "R4.2": "Verify at least once each calendar quarter that individuals with active electronic access or unescorted physical access have authorization records.",
+          "R4.3": "For electronic access, verify at least once every 15 calendar months that all user accounts, user account groups, or user role categories, and their specific, associated privileges are correct and are those that the Responsible Entity determines are necessary.",
+          "R4.4": "Verify at least once every 15 calendar months that access to the designated storage locations for BES Cyber System Information, whether physical or electronic, are correct and are those that the Responsible Entity determines are necessary for performing assigned work functions."
+        }
+      },
+      "R5": {
+        "description": "Each Responsible Entity shall implement one or more documented access revocation program(s) that collectively include each of the applicable requirement parts in CIP-004-7 Table R5 – Access Revocation.",
+        "subRequirements": {
+          "R5.1": "A process to initiate removal of an individual's ability for unescorted physical access and Interactive Remote Access upon a termination action, and complete the removals within 24 hours of the termination action.",
+          "R5.2": "For reassignments or transfers, revoke the individual's authorized electronic access to individual accounts and authorized unescorted physical access that the Responsible Entity determines are not necessary by the end of the next calendar day following the date that the Responsible Entity determines that the individual no longer requires retention of that access.",
+          "R5.3": "For termination actions, revoke the individual's non-shared user accounts (unless already revoked according to Part 5.1) within 30 calendar days of the effective date of the termination action.",
+          "R5.4": "For termination actions, change passwords for shared account(s) known to the user within 30 calendar days of the termination action.",
+          "R5.5": "For termination actions, determine and complete the actions necessary to revoke the individual's access to the designated storage locations for BES Cyber System Information, whether physical or electronic (unless already revoked according to Part 5.1), by the end of the next calendar day following the effective date of the termination action."
+        }
+      },
+      "R6": {
+        "description": "Each Responsible Entity shall implement one or more documented access management program(s) to authorize, verify, and revoke provisioned access to BCSI pertaining to the 'Applicable Systems' identified in CIP-004-7 Table R6 – Access Management for BES Cyber System Information that collectively include each of the applicable requirement parts in CIP-004-7 Table R6 – Access Management for BES Cyber System Information.",
+        "subRequirements": {
+          "R6.1": "Prior to provisioning, authorize (unless already authorized according to Part 4.1.) based on need, as determined by the Responsible Entity, except for CIP Exceptional Circumstances: Provisioned electronic access to electronic BCSI; and Provisioned physical access to physical BCSI.",
+          "R6.2": "Verify at least once every 15 calendar months that all individuals with provisioned access to BCSI: Have an authorization record; and Still need the provisioned access to perform their current work functions, as determined by the Responsible Entity.",
+          "R6.3": "For termination actions, remove the individual's ability to use provisioned access to BCSI (unless already revoked according to Part 5.1) by the end of the next calendar day following the effective date of the termination action."
+        }
+      }
+    },
+
+    "CIP-005-7": {
+    "R1": {
+      "description": "Each Responsible Entity shall implement one or more documented processes that collectively include each of the applicable requirement parts in CIP-005-7 Table R1 – Electronic Security Perimeter.",
+      "subRequirements": {
+        "R1.1": "All applicable Cyber Assets connected to a network via a routable protocol shall reside within a defined ESP.",
+        "R1.2": "All External Routable Connectivity must be through an identified Electronic Access Point (EAP).",
+        "R1.3": "Require inbound and outbound access permissions, including the reason for granting access, and deny all other access by default.",
+        "R1.4": "Where technically feasible, perform authentication when establishing Dial-up Connectivity with applicable Cyber Assets.",
+        "R1.5": "Have one or more methods for detecting known or suspected malicious communications for both inbound and outbound communications."
+      }
+    },
+    "R2": {
+      "description": "Each Responsible Entity shall implement one or more documented processes that collectively include the applicable requirement parts, where technically feasible, in CIP-005-7 Table R2 –Remote Access Management.",
+      "subRequirements": {
+        "R2.1": "For all Interactive Remote Access, utilize an Intermediate System such that the Cyber Asset initiating Interactive Remote Access does not directly access an applicable Cyber Asset.",
+        "R2.2": "For all Interactive Remote Access sessions, utilize encryption that terminates at an Intermediate System.",
+        "R2.3": "Require multi-factor authentication for all Interactive Remote Access sessions.",
+        "R2.4": "Have one or more methods for determining active vendor remote access sessions (including Interactive Remote Access and system-to-system remote access).",
+        "R2.5": "Have one or more method(s) to disable active vendor remote access (including Interactive Remote Access and system-to-system remote access)."
+      }
+    },
+    "R3": {
+      "description": "Each Responsible Entity shall implement one or more documented processes that collectively include the applicable requirement parts in CIP-005-7 Table R3 –Vendor Remote Access Management for EACMS and PACS.",
+      "subRequirements": {
+        "R3.1": "Have one or more method(s) to determine authenticated vendor-initiated remote connections.",
+        "R3.2": "Have one or more method(s) to terminate authenticated vendor-initiated remote connections and control the ability to reconnect."
+      }
+    }
+  },
+
+  "CIP-006-6": {
+    "R1": {
+      "description": "Each Responsible Entity shall implement one or more documented physical security plan(s) that collectively include all of the applicable requirement parts in CIP-006-6 Table R1 – Physical Security Plan.",
+      "subRequirements": {
+        "R1.1": "Define operational or procedural controls to restrict physical access.",
+        "R1.2": "Utilize at least one physical access control to allow unescorted physical access into each applicable Physical Security Perimeter to only those individuals who have authorized unescorted physical access.",
+        "R1.3": "Where technically feasible, utilize two or more different physical access controls to collectively allow unescorted physical access into Physical Security Perimeters to only those individuals who have authorized unescorted physical access.",
+        "R1.4": "Monitor for unauthorized access through a physical access point into a Physical Security Perimeter.",
+        "R1.5": "Issue an alarm or alert in response to detected unauthorized access through a physical access point into a Physical Security Perimeter to the personnel identified in the BES Cyber Security Incident response plan within 15 minutes of detection.",
+        "R1.6": "Monitor each Physical Access Control System for unauthorized physical access to a Physical Access Control System.",
+        "R1.7": "Issue an alarm or alert in response to detected unauthorized physical access to a Physical Access Control System to the personnel identified in the BES Cyber Security Incident response plan within 15 minutes of the detection.",
+        "R1.8": "Log (through automated means or by personnel who control entry) entry of each individual with authorized unescorted physical access into each Physical Security Perimeter, with information to identify the individual and date and time of entry.",
+        "R1.9": "Retain physical access logs of entry of individuals with authorized unescorted physical access into each Physical Security Perimeter for at least ninety calendar days.",
+        "R1.10": "Restrict physical access to cabling and other nonprogrammable communication components used for connection between applicable Cyber Assets within the same Electronic Security Perimeter in those instances when such cabling and components are located outside of a Physical Security Perimeter."
+      }
+    },
+    "R2": {
+      "description": "Each Responsible Entity shall implement one or more documented visitor control program(s) that include each of the applicable requirement parts in CIP-006-6 Table R2 – Visitor Control Program.",
+      "subRequirements": {
+        "R2.1": "Require continuous escorted access of visitors (individuals who are provided access but are not authorized for unescorted physical access) within each Physical Security Perimeter, except during CIP Exceptional Circumstances.",
+        "R2.2": "Require manual or automated logging of visitor entry into and exit from the Physical Security Perimeter that includes date and time of the initial entry and last exit, the visitor's name, and the name of an individual point of contact responsible for the visitor, except during CIP Exceptional Circumstances.",
+        "R2.3": "Retain visitor logs for at least ninety calendar days."
+      }
+    },
+    "R3": {
+      "description": "Each Responsible Entity shall implement one or more documented Physical Access Control System maintenance and testing program(s) that collectively include each of the applicable requirement parts in CIP-006-6 Table R3 – Maintenance and Testing Program.",
+      "subRequirements": {
+        "R3.1": "Maintenance and testing of each Physical Access Control System and locally mounted hardware or devices at the Physical Security Perimeter at least once every 24 calendar months to ensure they function properly."
+      }
+    }
+  },
+
+  "CIP-007-6": {
+    "R1": {
+      "description": "Each Responsible Entity shall implement one or more documented process(es) that collectively include each of the applicable requirement parts in CIP-007-6 Table R1 – Ports and Services.",
+      "subRequirements": {
+        "R1.1": "Where technically feasible, enable only logical network accessible ports that have been determined to be needed by the Responsible Entity, including port ranges or services where needed to handle dynamic ports. If a device has no provision for disabling or restricting logical ports on the device then those ports that are open are deemed needed.",
+        "R1.2": "Protect against the use of unnecessary physical input/output ports used for network connectivity, console commands, or Removable Media."
+      }
+    },
+    "R2": {
+      "description": "Each Responsible Entity shall implement one or more documented process(es) that collectively include each of the applicable requirement parts in CIP-007-6 Table R2 – Security Patch Management.",
+      "subRequirements": {
+        "R2.1": "A patch management process for tracking, evaluating, and installing cyber security patches for applicable Cyber Assets. The tracking portion shall include the identification of a source or sources that the Responsible Entity tracks for the release of cyber security patches for applicable Cyber Assets that are updateable and for which a patching source exists.",
+        "R2.2": "At least once every 35 calendar days, evaluate security patches for applicability that have been released since the last evaluation from the source or sources identified in Part 2.1.",
+        "R2.3": "For applicable patches identified in Part 2.2, within 35 calendar days of the evaluation completion, take one of the following actions: Apply the applicable patches; Create a dated mitigation plan; or Revise an existing mitigation plan.",
+        "R2.4": "For each mitigation plan created or revised in Part 2.3, implement the plan within the timeframe specified in the plan, unless a revision to the plan or an extension to the timeframe specified in Part 2.3 is approved by the CIP Senior Manager or delegate."
+      }
+    },
+    "R3": {
+      "description": "Each Responsible Entity shall implement one or more documented process(es) that collectively include each of the applicable requirement parts in CIP-007-6 Table R3 – Malicious Code Prevention.",
+      "subRequirements": {
+        "R3.1": "Deploy method(s) to deter, detect, or prevent malicious code.",
+        "R3.2": "Mitigate the threat of detected malicious code.",
+        "R3.3": "For those methods identified in Part 3.1 that use signatures or patterns, have a process for the update of the signatures or patterns. The process must address testing and installing the signatures or patterns."
+      }
+    },
+    "R4": {
+      "description": "Each Responsible Entity shall implement one or more documented process(es) that collectively include each of the applicable requirement parts in CIP-007-6 Table R4 – Security Event Monitoring.",
+      "subRequirements": {
+        "R4.1": "Log events at the BES Cyber System level (per BES Cyber System capability) or at the Cyber Asset level (per Cyber Asset capability) for identification of, and after-the-fact investigations of, Cyber Security Incidents that includes, as a minimum, each of the following types of events: 4.1.1. Detected successful login attempts; 4.1.2. Detected failed access attempts and failed login attempts; 4.1.3. Detected malicious code.",
+        "R4.2": "Generate alerts for security events that the Responsible Entity determines necessitates an alert, that includes, as a minimum, each of the following types of events (per Cyber Asset or BES Cyber System capability): 4.2.1. Detected malicious code from Part 4.1; and 4.2.2. Detected failure of Part 4.1 event logging.",
+        "R4.3": "Where technically feasible, retain applicable event logs identified in Part 4.1 for at least the last 90 consecutive calendar days except under CIP Exceptional Circumstances.",
+        "R4.4": "Review a summarization or sampling of logged events as determined by the Responsible Entity at intervals no greater than 15 calendar days to identify undetected Cyber Security Incidents."
+      }
+    },
+    "R5": {
+      "description": "Each Responsible Entity shall implement one or more documented process(es) that collectively include each of the applicable requirement parts in CIP-007-6 Table R5 – System Access Controls.",
+      "subRequirements": {
+        "R5.1": "Have a method(s) to enforce authentication of interactive user access, where technically feasible.",
+        "R5.2": "Identify and inventory all known enabled default or other generic account types, either by system, by groups of systems, by location, or by system type(s).",
+        "R5.3": "Identify individuals who have authorized access to shared accounts.",
+        "R5.4": "Change known default passwords, per Cyber Asset capability",
+        "R5.5": "For password-only authentication for interactive user access, either technically or procedurally enforce the following password parameters: 5.5.1. Password length that is, at least, the lesser of eight characters or the maximum length supported by the Cyber Asset; and 5.5.2. Minimum password complexity that is the lesser of three or more different types of characters (e.g., uppercase alphabetic, lowercase alphabetic, numeric, non-alphanumeric) or the maximum complexity supported by the Cyber Asset.",
+        "R5.6": "Where technically feasible, for password-only authentication for interactive user access, either technically or procedurally enforce password changes or an obligation to change the password at least once every 15 calendar months.",
+        "R5.7": "Where technically feasible, either: Limit the number of unsuccessful authentication attempts; or Generate alerts after a threshold of unsuccessful authentication attempts."
+      }
+    }
+  },
+
+  "CIP-008-6": {
+    "R1": {
+      "description": "Each Responsible Entity shall document one or more Cyber Security Incident response plan(s) that collectively include each of the applicable requirement parts in CIP-008-6 Table R1 – Cyber Security Incident Response Plan Specifications.",
+      "subRequirements": {
+        "R1.1": "One or more processes to identify, classify, and respond to Cyber Security Incidents.",
+        "R1.2": "One or more processes to: 1.2.1. That include criteria to evaluate and define attempts to compromise; 1.2.2. To determine if an identified Cyber Security Incident is a Reportable Cyber Security Incident or an attempt to compromise, as determined by applying the criteria from Part 1.2.1, one or more systems identified in the 'Applicable Systems' column for this Part; and 1.2.3. To provide notification per Requirement R4.",
+        "R1.3": "The roles and responsibilities of Cyber Security Incident response groups or individuals.",
+        "R1.4": "Incident handling procedures for Cyber Security Incidents."
+      }
+    },
+    "R2": {
+      "description": "Each Responsible Entity shall implement each of its documented Cyber Security Incident response plans to collectively include each of the applicable requirement parts in CIP-008-6 Table R2 – Cyber Security Incident Response Plan Implementation and Testing.",
+      "subRequirements": {
+        "R2.1": "Test each Cyber Security Incident response plan(s) at least once every 15 calendar months: By responding to an actual Reportable Cyber Security Incident; With a paper drill or tabletop exercise of a Reportable Cyber Security Incident; or With an operational exercise of a Reportable Cyber Security Incident.",
+        "R2.2": "Use the Cyber Security Incident response plan(s) under Requirement R1 when responding to a Reportable Cyber Security Incident, responding to a Cyber Security Incident that attempted to compromise a system identified in the 'Applicable Systems' column for this Part, or performing an exercise of a Reportable Cyber Security Incident. Document deviations from the plan(s) taken during the response to the incident or exercise.",
+        "R2.3": "Retain records related to Reportable Cyber Security Incidents and Cyber Security Incidents that attempted to compromise a system identified in the 'Applicable Systems' column for this Part as per the Cyber Security Incident response plan(s) under Requirement R1."
+      }
+    },
+    "R3": {
+      "description": "Each Responsible Entity shall maintain each of its Cyber Security Incident response plans according to each of the applicable requirement parts in CIP-008-6 Table R3 – Cyber Security Incident Response Plan Review, Update, and Communication.",
+      "subRequirements": {
+        "R3.1": "No later than 90 calendar days after completion of a Cyber Security Incident response plan(s) test or actual Reportable Cyber Security Incident response: 3.1.1. Document any lessons learned associated with a Cyber Security Incident response plan test or actual Reportable Cyber Security Incident response or document the absence of any lessons learned; 3.1.2. Update the Cyber Security Incident response plan based on any documented lessons learned associated with the plan; and 3.1.3. Notify each person or group with a defined role in the Cyber Security Incident response plan of the updates to the Cyber Security Incident response plan based on any documented lessons learned.",
+        "R3.2": "No later than 60 calendar days after a change to the roles or responsibilities, Cyber Security Incident response groups or individuals, or technology that the Responsible Entity determines would impact the ability to execute the plan: 3.2.1. Update the Cyber Security Incident response plan(s); and 3.2.2. Notify each person or group with a defined role in the Cyber Security Incident response plan of the updates."
+      }
+    },
+    "R4": {
+      "description": "Each Responsible Entity shall notify the Electricity Information Sharing and Analysis Center (E-ISAC) and, if subject to the jurisdiction of the United States, the United States National Cybersecurity and Communications Integration Center (NCCIC), or their successors, of a Reportable Cyber Security Incident and a Cyber Security Incident that was an attempt to compromise, as determined by applying the criteria from Requirement R1, Part 1.2.1, a system identified in the 'Applicable Systems' column, unless prohibited by law, in accordance with each of the applicable requirement parts in CIP-008-6 Table R4 – Notifications and Reporting for Cyber Security Incidents.",
+      "subRequirements": {
+        "R4.1": "Initial notifications and updates shall include the following attributes, at a minimum, to the extent known: 4.1.1. The functional impact; 4.1.2. The attack vector used; and 4.1.3. The level of intrusion that was achieved or attempted.",
+        "R4.2": "After the Responsible Entity's determination made pursuant to documented process(es) in Requirement R1, Part 1.2, provide initial notification within the following timelines: One hour after the determination of a Reportable Cyber Security Incident. By the end of the next calendar day after determination that a Cyber Security Incident was an attempt to compromise a system identified in the 'Applicable Systems' column for this Part.",
+        "R4.3": "Provide updates, if any, within 7 calendar days of determination of new or changed attribute information required in Part 4.1."
+      }
+    }
+  },
+
+  "CIP-009-6": {
+    "R1": {
+      "description": "Each Responsible Entity shall have one or more documented recovery plan(s) that collectively include each of the applicable requirement parts in CIP-009-6 Table R1 – Recovery Plan Specifications.",
+      "subRequirements": {
+        "R1.1": "Conditions for activation of the recovery plan(s).",
+        "R1.2": "Roles and responsibilities of responders.",
+        "R1.3": "One or more processes for the backup and storage of information required to recover BES Cyber System functionality.",
+        "R1.4": "One or more processes to verify the successful completion of the backup processes in Part 1.3 and to address any backup failures.",
+        "R1.5": "One or more processes to preserve data, per Cyber Asset capability, for determining the cause of a Cyber Security Incident that triggers activation of the recovery plan(s). Data preservation should not impede or restrict recovery."
+      }
+    },
+    "R2": {
+      "description": "Each Responsible Entity shall implement its documented recovery plan(s) to collectively include each of the applicable requirement parts in CIP-009-6 Table R2 – Recovery Plan Implementation and Testing.",
+      "subRequirements": {
+        "R2.1": "Test each of the recovery plans referenced in Requirement R1 at least once every 15 calendar months: By recovering from an actual incident; With a paper drill or tabletop exercise; or With an operational exercise.",
+        "R2.2": "Test a representative sample of information used to recover BES Cyber System functionality at least once every 15 calendar months to ensure that the information is useable and is compatible with current configurations.",
+        "R2.3": "Test each of the recovery plans referenced in Requirement R1 at least once every 36 calendar months through an operational exercise of the recovery plans in an environment representative of the production environment."
+      }
+    },
+    "R3": {
+      "description": "Each Responsible Entity shall maintain each of its recovery plan(s) in accordance with each of the applicable requirement parts in CIP-009-6 Table R3 – Recovery Plan Review, Update and Communication.",
+      "subRequirements": {
+        "R3.1": "No later than 90 calendar days after completion of a recovery plan test or actual recovery: 3.1.1. Document any lessons learned associated with a recovery plan test or actual recovery or document the absence of any lessons learned; 3.1.2. Update the recovery plan based on any documented lessons learned associated with the plan; and 3.1.3. Notify each person or group with a defined role in the recovery plan of the updates to the recovery plan based on any documented lessons learned.",
+        "R3.2": "No later than 60 calendar days after a change to the roles or responsibilities, responders, or technology that the Responsible Entity determines would impact the ability to execute the recovery plan: 3.2.1. Update the recovery plan; and 3.2.2. Notify each person or group with a defined role in the recovery plan of the updates."
+      }
+    }
+  },
+
+  "CIP-010-4": {
+    "R1": {
+      "description": "Each Responsible Entity shall implement one or more documented process(es) that collectively include each of the applicable requirement parts in CIP-010-4 Table R1 – Configuration Change Management.",
+      "subRequirements": {
+        "R1.1": "Develop a baseline configuration, individually or by group, which shall include the following items: 1.1.1. Operating system(s) (including version) or firmware where no independent operating system exists; 1.1.2. Any commercially available or open-source application software (including version) intentionally installed; 1.1.3. Any custom software installed; 1.1.4. Any logical network accessible ports; and 1.1.5. Any security patches applied.",
+        "R1.2": "Authorize and document changes that deviate from the existing baseline configuration.",
+        "R1.3": "For a change that deviates from the existing baseline configuration, update the baseline configuration as necessary within 30 calendar days of completing the change.",
+        "R1.4": "For a change that deviates from the existing baseline configuration: 1.4.1. Prior to the change, determine required cyber security controls in CIP-005 and CIP-007 that could be impacted by the change; 1.4.2. Following the change, verify that required cyber security controls determined in 1.4.1 are not adversely affected; and 1.4.3. Document the results of the verification.",
+        "R1.5": "Where technically feasible, for each change that deviates from the existing baseline configuration: 1.5.1. Prior to implementing any change in the production environment, test the changes in a test environment or test the changes in a production environment where the test is performed in a manner that minimizes adverse effects, that models the baseline configuration to ensure that required cyber security controls in CIP-005 and CIP-007 are not adversely affected; and 1.5.2. Document the results of the testing and, if a test environment was used, the differences between the test environment and the production environment, including a description of the measures used to account for any differences in operation between the test and production environments.",
+        "R1.6": "Prior to a change that deviates from the existing baseline configuration associated with baseline items in Parts 1.1.1, 1.1.2, and 1.1.5, and when the method to do so is available to the Responsible Entity from the software source: 1.6.1. Verify the identity of the software source; and 1.6.2. Verify the integrity of the software obtained from the software source."
+      }
+    },
+    "R2": {
+      "description": "Each Responsible Entity shall implement one or more documented process(es) that collectively include each of the applicable requirement parts in CIP-010-4 Table R2 – Configuration Monitoring.",
+      "subRequirements": {
+        "R2.1": "Monitor at least once every 35 calendar days for changes to the baseline configuration (as described in Requirement R1, Part 1.1). Document and investigate detected unauthorized changes."
+      }
+    },
+    "R3": {
+      "description": "Each Responsible Entity shall implement one or more documented process(es) that collectively include each of the applicable requirement parts in CIP-010-4 Table R3– Vulnerability Assessments.",
+      "subRequirements": {
+        "R3.1": "At least once every 15 calendar months, conduct a paper or active vulnerability assessment.",
+        "R3.2": "Where technically feasible, at least once every 36 calendar months: 3.2.1 Perform an active vulnerability assessment in a test environment, or perform an active vulnerability assessment in a production environment where the test is performed in a manner that minimizes adverse effects, that models the baseline configuration of the BES Cyber System in a production environment; and 3.2.2 Document the results of the testing and, if a test environment was used, the differences between the test environment and the production environment, including a description of the measures used to account for any differences in operation between the test and production environments.",
+        "R3.3": "Prior to adding a new applicable Cyber Asset to a production environment, perform an active vulnerability assessment of the new Cyber Asset, except for CIP Exceptional Circumstances and like replacements of the same type of Cyber Asset with a baseline configuration that models an existing baseline configuration of the previous or other existing Cyber Asset.",
+        "R3.4": "Document the results of the assessments conducted according to Parts 3.1, 3.2, and 3.3 and the action plan to remediate or mitigate vulnerabilities identified in the assessments including the planned date of completing the action plan and the execution status of any remediation or mitigation action items."
+      }
+    },
+    "R4": {
+      "description": "Each Responsible Entity, for its high impact and medium impact BES Cyber Systems and associated Protected Cyber Assets, shall implement, except under CIP Exceptional Circumstances, one or more documented plan(s) for Transient Cyber Assets and Removable Media that include the sections in Attachment 1.",
+      "subRequirements": {}
+    }
+  },
+
+  "CIP-011-3": {
+    "R1": {
+      "description": "Each Responsible Entity shall implement one or more documented information protection program(s) for BES Cyber System Information (BCSI) pertaining to 'Applicable Systems' that collectively include each of the applicable requirement parts in CIP-011-3 Table R1 – Information Protection Program.",
+      "subRequirements": {
+        "R1.1": "Method(s) to identify BCSI.",
+        "R1.2": "Method(s) to protect and securely handle BCSI to mitigate risks of compromising confidentiality."
+      }
+    },
+    "R2": {
+      "description": "Each Responsible Entity shall implement one or more documented process(es) that collectively include the applicable requirement parts in CIP-011-3 Table R2 – BES Cyber Asset Reuse and Disposal.",
+      "subRequirements": {
+        "R2.1": "Prior to the release for reuse of applicable Cyber Assets that contain BCSI (except for reuse within other systems identified in the 'Applicable Systems' column), the Responsible Entity shall take action to prevent the unauthorized retrieval of BCSI from the Cyber Asset data storage media.",
+        "R2.2": "Prior to the disposal of applicable Cyber Assets that contain BCSI, the Responsible Entity shall take action to prevent the unauthorized retrieval of BCSI from the Cyber Asset or destroy the data storage media."
+      }
+    }
+  },
+  
+  "CIP-013-2": {
+    "R1": {
+      "description": "Each Responsible Entity shall develop one or more documented supply chain cyber security risk management plan(s) for high and medium impact BES Cyber Systems and their associated EACMS and PACS. The plan(s) shall include:",
+      "subRequirements": {
+        "R1.1": "One or more process(es) used in planning for the procurement of BES Cyber Systems and their associated EACMS and PACS to identify and assess cyber security risk(s) to the Bulk Electric System from vendor products or services resulting from: (i) procuring and installing vendor equipment and software; and (ii) transitions from one vendor(s) to another vendor(s).",
+        "R1.2": "One or more process(es) used in procuring BES Cyber Systems, and their associated EACMS and PACS, that address the following, as applicable:",
+        "R1.2.1": "Notification by the vendor of vendor-identified incidents related to the products or services provided to the Responsible Entity that pose cyber security risk to the Responsible Entity;",
+        "R1.2.2": "Coordination of responses to vendor-identified incidents related to the products or services provided to the Responsible Entity that pose cyber security risk to the Responsible Entity;",
+        "R1.2.3": "Notification by vendors when remote or onsite access should no longer be granted to vendor representatives;",
+        "R1.2.4": "Disclosure by vendors of known vulnerabilities related to the products or services provided to the Responsible Entity;",
+        "R1.2.5": "Verification of software integrity and authenticity of all software and patches provided by the vendor for use in the BES Cyber System and their associated EACMS and PACS; and",
+        "R1.2.6": "Coordination of controls for vendor-initiated remote access."
+      }
+    },
+    "R2": {
+      "description": "Each Responsible Entity shall implement its supply chain cyber security risk management plan(s) specified in Requirement R1.",
+      "note": "Implementation of the plan does not require the Responsible Entity to renegotiate or abrogate existing contracts (including amendments to master agreements and purchase orders). Additionally, the following issues are beyond the scope of Requirement R2: (1) the actual terms and conditions of a procurement contract; and (2) vendor performance and adherence to a contract."
+    },
+    "R3": {
+      "description": "Each Responsible Entity shall review and obtain CIP Senior Manager or delegate approval of its supply chain cyber security risk management plan(s) specified in Requirement R1 at least once every 15 calendar months."
+    }
+  }
+};
+
+function updateRequirementDropdown() {
+            const standard = document.getElementById('standard').value;
+            const requirementDropdown = document.getElementById('requirement');
+            requirementDropdown.innerHTML = '';
+
+            if (cipMatrix.BCA.High_Impact[standard]) {
+                cipMatrix.BCA.High_Impact[standard].forEach(req => {
+                    const option = document.createElement('option');
+                    option.value = req;
+                    option.textContent = req;
+                    requirementDropdown.appendChild(option);
+                });
+            }
+        }
+
+        function showRequirementsByAsset() {
+            const classification = document.getElementById('classification').value;
+            const impactRating = document.getElementById('impactRating').value;
+
+            if (cipMatrix[classification] && cipMatrix[classification][impactRating]) {
+                const requirements = cipMatrix[classification][impactRating];
+                let output = `<h2>Requirements for ${classification} - ${impactRating.replace('_', ' ')}</h2>`;
+                output += '<ul>';
+                for (const standard in requirements) {
+                    output += `<li>${standard}: ${requirements[standard].join(', ')}</li>`;
+                }
+                output += '</ul>';
+                document.getElementById('output').innerHTML = output;
+            } else {
+                document.getElementById('output').innerHTML = '<p>No applicable requirements found.</p>';
+            }
+        }
+
+        function showAssetsByRequirement() {
+            const standard = document.getElementById('standard').value;
+            const requirement = document.getElementById('requirement').value;
+            const classifications = [];
+
+            for (const classification in cipMatrix) {
+                for (const impactRating in cipMatrix[classification]) {
+                    if (cipMatrix[classification][impactRating][standard] && cipMatrix[classification][impactRating][standard].includes(requirement)) {
+                        classifications.push(`${classification} - ${impactRating}`);
+                    }
+                }
+            }
+
+            let output = `<h2>Assets for ${standard} ${requirement}</h2>`;
+            if (classifications.length > 0) {
+                output += '<ul>';
+                classifications.forEach(classification => {
+                    output += `<li>${classification}</li>`;
+                });
+                output += '</ul>';
+            } else {
+                output += '<p>No assets found for this requirement.</p>';
+            }
+            document.getElementById('output').innerHTML = output;
+        }
+
+        // Initialize requirement dropdown based on the default standard
+        updateRequirementDropdown();
+    </script>
+</body>
+</html>
